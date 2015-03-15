@@ -6,7 +6,7 @@
     <meta content='width=device-width; height=device-height; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;' name='viewport' />
     <meta name="viewport" content="width=device-width" />
     <meta name="license" content="
-        Copyright 2013 Google, Abram Hindle
+        Copyright 2013 Google, Abram Hindle, Neil Borle
         
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -122,9 +122,12 @@ function getPosition(e) {
 }
 
 function addEntity(entity, data) {
+    var entry = {};
+    entry[entity] = data;
     world[entity] = data;
-    drawNextFrame(); // (but should we?)
     //XXX: Send a XHTML Request that updates the entity you just modified!
+    debug("WebSocket Send:" + JSON.stringify(entry));
+    socket.send(JSON.stringify(entry));
 }
 var counter = 0;
 function addEntityWithoutName(data) {
@@ -254,6 +257,7 @@ function wsSetup() {
     socket = new WebSocket(url);
     socket.onopen = function() {
         //XXX: TODO What are you going to do here?
+        socket.send(JSON.stringify({}));
     };
     socket.onerror = function(msg) {
         debug("WebSocket Error:" + msg.data);
@@ -262,6 +266,11 @@ function wsSetup() {
         try {
             debug("WebSocket Recv:" + msg.data);
             //XXX: TODO What are you going to do here?            
+            var entry = JSON.parse(msg.data);
+            for (var entity in entry) {
+              world[entity] = entry[entity];
+            }
+            drawNextFrame();
         } catch (e) {
             alert("socket on message: " + e);
         }

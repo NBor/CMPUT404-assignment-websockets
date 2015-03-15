@@ -78,7 +78,12 @@ def read_ws(ws, client):
             #print "WS RECV: %s" % msg
             if (msg is not None):
                 packet = json.loads(msg)
-                client.put(packet)
+                if packet == {}:
+                    for entity in myWorld.world():
+                        entry = {entity: myWorld.get(entity)}
+                        ws.send(json.dumps(entry))
+                else:
+                    client.put(packet)
             else:
                 break
     except Exception as e:# WebSocketError as e:
@@ -101,14 +106,14 @@ def subscribe_socket(ws):
         while True:
             # block here
             entry = client.get()
-            entity = entry.keys()[0]
-            myWorld.set(entity, entry[entity])
+            for entity in entry:
+                myWorld.set(entity, entry[entity])
     except Exception as e:# WebSocketError as e:
         print "WS Error %s" % e
     finally:
+        ws.close()
         myWorld.listeners.remove(set_listener)
         gevent.kill(g)
-        ws.close()
 
 
 def flask_post_json():
