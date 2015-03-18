@@ -47,15 +47,36 @@ world = {};
 //XXX: TODO Make this prettier!
 function drawCircle(context,entity) {
     with(context) {
-        beginPath();                
-        lineWidth = 3;
-        var x = entity["x"];
-        var y = entity["y"];
-        //moveTo(x,y);
-        fillStyle = entity["colour"];
-        strokeStyle = fillStyle;
-        arc(x, y, (entity["radius"])?entity["radius"]:50, 0, 2.0 * Math.PI, false);  
-        stroke();                                
+        beginPath();
+        var x = entity.x;
+        var y = entity.y;
+        if (entity.type === 1){
+            lineWidth = 8;
+            var grad = createLinearGradient(x-20, y-20, x+20, y+20);
+            grad.addColorStop(0, 'black');
+            grad.addColorStop(1, 'white');
+            strokeStyle = entity.colour;
+            fillStyle = grad;
+            arc(x, y, (entity.radius)?entity.radius:50, 0, 2.0 * Math.PI, false);
+            fill();
+        }
+        else if (entity.type === 2){
+            var colour = entity.colour;
+            if (Math.random() > 0.8){
+                colour = 'white';
+            }
+            lineWidth = 2;
+            fillStyle = colour;
+            strokeStyle = fillStyle;
+            rect(x, y, 10, 10);
+        }
+        else if (entity.type === 3){
+            lineWidth = 1;
+            fillStyle = entity.colour;
+            strokeStyle = fillStyle;
+            arc(x, y, (entity.radius*2)?entity.radius*2:50, 0, 2.0 * Math.PI, false);
+        }
+        stroke();
     }
 }
 
@@ -234,16 +255,18 @@ mouse = (function() {
 // Add the application specific mouse listeners!
 //XXX: TODO Make these prettier!
 mouse.mousedowners.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'blue'});
+    addEntityWithoutName({'x':x,'y':y,'colour':'blue',
+                          'radius':30, 'type':1});
 });
 
 mouse.mouseuppers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'red'});
+    addEntityWithoutName({'x':x,'y':y,'colour':'red',
+                          'radius':50, 'type':3});
 });
 
 mouse.mousedraggers.push(function(x,y,clicked,e) {
     addEntityWithoutName({'x':x,'y':y,'colour':'green',
-                          'radius':10});
+                          'radius':10, 'type':2});
 });
 
 
