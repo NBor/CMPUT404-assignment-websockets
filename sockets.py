@@ -69,7 +69,7 @@ def hello():
     return redirect(url_for('static', filename='index.html'))
 
 
-def read_ws(ws, client):
+def read_ws(ws, client, listener):
     '''A greenlet function that reads from the websocket and updates the world'''
     # XXX: TODO IMPLEMENT ME
     try:
@@ -80,11 +80,12 @@ def read_ws(ws, client):
                 packet = json.loads(msg)
                 if packet == {}:
                     for entity in myWorld.world():
-                        entry = {entity: myWorld.get(entity)}
-                        ws.send(json.dumps(entry))
+                        listener(entity, myWorld.get(entity))
                 else:
                     client.put(packet)
             else:
+                ws.close()
+                myWorld.listeners.remove(listener)
                 break
     except Exception as e:# WebSocketError as e:
         print "WS Error %s" % e
@@ -101,7 +102,7 @@ def subscribe_socket(ws):
     myWorld.add_set_listener(set_listener)
 
     client = queue.Queue()
-    g = gevent.spawn(read_ws, ws, client)
+    g = gevent.spawn(read_ws, ws, client, set_listener)
     try:
         while True:
             # block here
@@ -112,7 +113,8 @@ def subscribe_socket(ws):
         print "WS Error %s" % e
     finally:
         ws.close()
-        myWorld.listeners.remove(set_listener)
+        if set_listener in myWorld.listeners:
+            myWorld.listeners.remove(set_listener)
         gevent.kill(g)
 
 
